@@ -1,44 +1,64 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Message from '../components/Message';
-import MessageDetail from '../model/MessageDetail';
+import MessageModel from '../model/MessageModel';
 import axios from 'axios';
 import { Box, TextField, Container, Button } from '@mui/material';
-
-
+import {over} from 'stompjs';
+import SockJS from 'sockjs-client';
 
 const Chatroom = () => {
   let [messages, setMessages] = useState([]); 
   let [input, setInput] = useState(""); 
+  let stompClientRef = useRef(null);
   let hasPageBeenRendered = useRef(false);
 
   const handleSend = () => {
+    let userId = localStorage.getItem("userId");
+    let username = localStorage.getItem("username");
     let newMessage = {
-      message: {
-        body: input
-      },
-      senderName: 'test1'
+      message: new MessageModel(input, userId),
+      senderName: username
     };
-    let messageList = [...messages];
-    messageList.push(newMessage);
-    setMessages(messageList);
+    sendMessage(newMessage);
   };
 
   useEffect(() => {
     if (!hasPageBeenRendered.current) {
-        axios("http://localhost:3000/message/all").then((res) => {
-            setMessages(res.data);
-        }).catch(err => {
-            console.log(err);
-        });
-                
-        hasPageBeenRendered = true;
+      axios("http://localhost:3000/message/all").then((res) => {
+          setMessages(res.data);
+      }).catch(err => {
+          console.log(err);
+      });
+              
+      registerUser();
+      hasPageBeenRendered.current = true;
     }
-  }, []);
-        
-  useEffect(() => {
-    console.log(messages);
-  }, [messages])
 
+  }, []);
+
+  const registerUser = () => {
+    let sock = new SockJS("http://localhost:3000/ws");
+    stompClientRef.current = over(sock);
+    stompClientRef.current.connect({}, onConnected, onWebSocketError);
+  }
+
+  const onConnected = () => {
+    stompClientRef.current.subscribe('/chatroom/public', async (res) => {      
+      setMessages(preMessages => [...preMessages, JSON.parse(res.body)]);
+    });
+  };
+
+  const onWebSocketError = (error) => {
+    console.error('Error with websocket', error);
+  };
+
+  const sendMessage = (newMessage) => {
+    if (stompClientRef.current && stompClientRef.current.connected) {
+      stompClientRef.current.send("/app/send", {}, JSON.stringify(newMessage));
+    } else {
+      console.error('WebSocket connection is not established.');
+    }
+  }
 
   return (
     <Box
@@ -51,7 +71,7 @@ const Chatroom = () => {
             display="flex"
             flexDirection="column"
             gap={3}>
-            { messages.map(msg => <Message senderName={msg.senderName} body={msg.message.body}/>) }
+            { messages.map(msg => <Message _senderName={msg.senderName} _body={msg.message.body}/>) }
         </Box>
         <Box
           display="flex"

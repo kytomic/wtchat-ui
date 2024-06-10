@@ -2,13 +2,11 @@ import React, { useState } from 'react';
 import {Box, Container, Typography} from '@mui/material';
 import '../model/MessageDetail';
 
-function temp() {
-    const temp = new MessageDetail("name", "name", "name");
-}
 
-const Message = (props) => {
-  let [senderName, setSenderName] = useState(props.senderName);
-  let [body, setBody] = useState(props.body);
+
+const Message = ({_senderName, _body}) => {
+  let [senderName, setSenderName] = useState(_senderName);
+  let [body, setBody] = useState(_body);
 
   return (
     <Box
@@ -16,7 +14,8 @@ const Message = (props) => {
         paddingTop={2} paddingBottom={2} paddingLeft={2} paddingRight={2}
         display="flex"
         flexDirection="column"
-        justifyContent="flex-start"       
+        justifyContent="flex-start"
+        bgcolor="white"       
     >
         <Typography color="blue" fontWeight="500">{senderName}</Typography>
         <Typography>{body}</Typography>
