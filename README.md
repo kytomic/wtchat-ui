@@ -3,7 +3,8 @@
 This is a simple chat application implemented using Java Spring Boot and ReactJS
 - Wtchat
 
-Frontend Repository: https://github.com/kytomic/wtchat-ui
+Frontend Repository: https://github.com/kytomic/wtchat-ui 
+
 Backend Repository: https://github.com/kytomic/wtchat
 
 Here is the demostration:
